@@ -13,25 +13,45 @@ namespace BasicWebServer.Server.HTTP
 
         public int Count => this.headers.Count;
 
-        public void Add(string location, Header header)
+        public void Add(string name, string value )
+        {
+            if(this.Contains(name))
+            {
+                var header = new Header(name, value);
+                this.headers[name] = header;
+            }
+         
+
+        }
+
+        public bool Contains(string name)
+        {
+            return headers.ContainsKey(name);
+        }
+
+        public string this[string name]
+        {
+            get
+            {
+                return headers[name].Value;
+            }
+
+            set
+            {
+                headers[name].Value = value;
+            }
+        }
+        public IEnumerator<Header> GetEnumerator()
+        {
+            return headers.Values.GetEnumerator();
+        }
+
+       internal void Add(Header header)
         {
             this.headers[header.Name] = header;
         }
 
-        public IEnumerator<Header> GetEnumerator()
-        {
-           return headers.Values.GetEnumerator();
-        }
-
-        internal void Add(string location1, string location2)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void Add(Header header)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {

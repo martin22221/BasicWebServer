@@ -3,13 +3,13 @@ using BasicWebServer.Server.Common;
 namespace BasicWebServer.Server.HTTP
 {
 
-   
+
     public class Header
     {
         public const string ContentType = "Content-Type";
         public const string ContentLength = "Content-Length";
         public const string Date = "Date";
-        public const string Locat0000ion = "Location";
+        public const string Location = "Location";
         public const string Server = "Server";
 
 
@@ -27,5 +27,11 @@ namespace BasicWebServer.Server.HTTP
         public string Name { get; }
 
         public string Value { get; set; }
+
+
+        public override string ToString()
+        {
+            return $"{Name}:{Value}";
+        }
     }
 }

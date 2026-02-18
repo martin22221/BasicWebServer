@@ -54,6 +54,10 @@ namespace BasicWebServer.Server
 
                 var response  = routes.MatchRequest(request);
 
+                if (response.PreRenderAction != null)
+                {
+                    response.PreRenderAction(request, response);
+                }
                 WriteResponse(networkStream, response);
 
                 client.Close();

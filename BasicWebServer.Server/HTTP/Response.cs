@@ -10,37 +10,41 @@ namespace BasicWebServer.Server.HTTP
 
             this.Headers = new HeaderCollection();
 
-           Headers.Add(new Header("Server", "BasicWebServer"));
-           Headers.Add(new Header("Content-Type", "text/plain; charset=UTF-8"));
+            Headers.Add(new Header("Server", "BasicWebServer"));
+          
         }
 
-        public StatusCode StatusCode { get; }
+        public StatusCode StatusCode { get; set;  }
 
-        public HeaderCollection Headers { get; }
+        public HeaderCollection Headers { get; set;  } = new HeaderCollection();
 
         public string Body { get; set; }
-
+         public Action<Request, Response> PreRenderAction { get; protected set; }
 
         public override string ToString()
         {
             var result = new StringBuilder();
 
-            result.Append($"HTTP/1.1 {(int)StatusCode} {StatusCode}");
+          
+            result.AppendLine($"HTTP/1.1 {(int)StatusCode} {StatusCode}");
+
 
             foreach (var header in Headers)
             {
-                result.Append($"{header.Name}:{header.Value}");
+                result.AppendLine($"{header.Name}: {header.Value}");
             }
 
+           
             result.AppendLine();
 
-            if (string.IsNullOrWhiteSpace(Body) ==false)
+            if (!string.IsNullOrWhiteSpace(Body))
             {
                 result.Append(Body);
             }
 
-           return  result.ToString();
+            return result.ToString();
         }
+
 
 
     }

@@ -11,7 +11,8 @@ namespace BasicWebServer.Server.HTTP
 
         public const string PlainText = "text/plain; charset = UTF-8";
         public const string Html = "text/html; charset= UTF-8";
-          
+        public const string UrlEncoded = "application/x-www-form-urlencoded";
+
 
     }
 }
