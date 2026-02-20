@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BasicWebServer.Server.Contracts;
 using BasicWebServer.Server.HTTP;
@@ -36,67 +37,61 @@ namespace BasicWebServer.Server
         }
 
 
-        public void Start()
+        public async Task  Start()
         {      
             this.listener.Start();
 
+            Console.WriteLine($"Server started on port {port}. ");
+            Console.WriteLine("Listening for requests...");
+
             while (true)
             {
-                TcpClient client = this.listener.AcceptTcpClient();
+                TcpClient client = await this.listener.AcceptTcpClientAsync();
 
-                using NetworkStream networkStream = client.GetStream();
+                _ = Task.Run(async () => {
+                    using NetworkStream networkStream = client.GetStream();
 
-                string requestText = ReadRequest(networkStream);
-                Console.WriteLine(requestText);
-                var request = Request.Parse(requestText);
+                    var requestText = await ReadRequestAsync(networkStream);
+                    Console.WriteLine(requestText);
+                    var request = Request.Parse(requestText);
 
-               // client.Close();
+                    // client.Close();
 
-                var response  = routes.MatchRequest(request);
+                    var response = routes.MatchRequest(request);
 
-                if (response.PreRenderAction != null)
-                {
-                    response.PreRenderAction(request, response);
-                }
-                WriteResponse(networkStream, response);
+                    if (response.PreRenderAction != null)
+                    {
+                        response.PreRenderAction(request, response);
+                    }
+                    await WriteResponseAsync(networkStream, response);
 
-                client.Close();
+                    client.Close();
+                });
+               
 
             }
         }
 
-        private static void WriteResponse(NetworkStream networkStream, Response response)
+        private async Task WriteResponseAsync(NetworkStream networkStream, Response response)
         {
+            var responseBytes = Encoding.UTF8.GetBytes(response.ToString());
 
-           var responseBytes = Encoding.UTF8.GetBytes(response.ToString());
-            networkStream.Write(responseBytes);
+            await networkStream.WriteAsync(responseBytes, 0, responseBytes.Length);
+            await networkStream.FlushAsync();
         }
-
-        private static string ReadRequest(NetworkStream networkStream)
+        private async Task<string> ReadRequestAsync(NetworkStream networkStream)
         {
-            byte[] buffer = new byte[1024];
+            var buffer = new byte[8192];
+            var requestBuilder = new StringBuilder();
 
-            StringBuilder request = new StringBuilder();
+            int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
 
-            int bytesRead;
-            int totalBytesReceived = 0;
-
-            do
+            if (bytesRead > 0)
             {
-                bytesRead = networkStream.Read(buffer, 0, buffer.Length);
-                totalBytesReceived += bytesRead;
-              
-                if (totalBytesReceived > 10000)
-                {
-                    throw new InvalidOperationException("Request is too large.");
-                }
-                
-                string requestPart = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                request.Append(requestPart);
+                requestBuilder.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
             }
 
-            while (networkStream.DataAvailable);
-            return request.ToString();
+            return requestBuilder.ToString();
         }
     }
 }

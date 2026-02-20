@@ -1,62 +1,57 @@
-using System.Collections.Generic;
+    using System.Collections.Generic;
 
-namespace BasicWebServer.Server.HTTP
-{
-    public class HeaderCollection : IEnumerable<Header>
+    namespace BasicWebServer.Server.HTTP
     {
-        private readonly Dictionary<string, Header> headers;
-
-        public HeaderCollection()
+        public class HeaderCollection : IEnumerable<Header>
         {
-            this.headers = new Dictionary<string, Header>();
-        }
+            private readonly Dictionary<string, Header> headers;
 
-        public int Count => this.headers.Count;
-
-        public void Add(string name, string value )
-        {
-            if(this.Contains(name))
+            public HeaderCollection()
             {
-                var header = new Header(name, value);
-                this.headers[name] = header;
+                this.headers = new Dictionary<string, Header>();
             }
-         
 
+            public int Count => this.headers.Count;
+
+        public void Add(string name, string value)
+        {
+            var header = new Header(name, value);
+            this.headers[name] = header;
         }
 
         public bool Contains(string name)
-        {
-            return headers.ContainsKey(name);
-        }
-
-        public string this[string name]
-        {
-            get
             {
-                return headers[name].Value;
+                return headers.ContainsKey(name);
             }
 
-            set
+            public string this[string name]
             {
-                headers[name].Value = value;
-            }
-        }
-        public IEnumerator<Header> GetEnumerator()
-        {
-            return headers.Values.GetEnumerator();
-        }
+                get
+                {
+                    return headers[name].Value;
+                }
 
-       internal void Add(Header header)
-        {
-            this.headers[header.Name] = header;
-        }
+                set
+                {
+                    headers[name].Value = value;
+                }
+            }
+            public IEnumerator<Header> GetEnumerator()
+            {
+                return headers.Values.GetEnumerator();
+            }
+
+           internal void Add(Header header)
+            {
+                this.headers[header.Name] = header;
+            }
 
        
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
 
+        }
     }
-}
