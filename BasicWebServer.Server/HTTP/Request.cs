@@ -6,13 +6,14 @@ namespace BasicWebServer.Server.HTTP
 {
     public class Request
     {
-        public Request(Method method, string url, HeaderCollection headers, string body, Dictionary<string, string> form)
+        public Request(Method method, string url, HeaderCollection headers, string body, Dictionary<string, string> form, CookieCollection cookies)
         {
             this.Method = method;
             this.Url = url;
             this.Headers = headers;
             this.Body = body;
             this.Form = form;
+            this.Cookies = cookies;
         }
 
         public Request()
@@ -25,9 +26,15 @@ namespace BasicWebServer.Server.HTTP
 
         public HeaderCollection Headers { get; }
 
+        public CookieCollection Cookies { get; }
+
         public string Body { get; }
 
         public IReadOnlyDictionary<string, string> Form { get; private set; }
+
+
+
+
 
         public static Request Parse(string request)
         {
@@ -46,13 +53,14 @@ namespace BasicWebServer.Server.HTTP
                 .ToArray();
 
             HeaderCollection headers = ParseHeaders(headerLines);
+            var cookies = ParseCookies(headers);
 
             string[] bodyLines = lines.Skip(1 + headerLines.Length + 1).ToArray();
             string body = string.Join("\r\n", bodyLines);
 
             var form = ParseForm(headers, body);
 
-            return new Request(method, url, headers, body, form);
+            return new Request(method, url, headers, body, form, cookies);
         }
 
 
@@ -118,6 +126,29 @@ namespace BasicWebServer.Server.HTTP
             }
 
             return headers;
+        }
+
+        private static CookieCollection ParseCookies(HeaderCollection headers)
+        {
+            var cookieCollection = new CookieCollection();
+            if (headers.Contains(Header.Cookie))
+            {
+                var cookieHeader = headers[Header.Cookie];
+                var allCookies = cookieHeader.Split(';');
+
+                foreach(var cookie in allCookies)
+                {
+                    var cookieParts = cookie.Split('=');
+
+
+                    var cookieName = cookieParts[0];
+                    var cookieValue = cookieParts[1];
+
+
+                    cookieCollection.Add(cookieName, cookieValue);
+                }
+            }
+            return cookieCollection;
         }
     }
 }

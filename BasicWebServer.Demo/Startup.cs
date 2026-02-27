@@ -2,6 +2,8 @@
 using BasicWebServer.Server.HTTP;
 using BasicWebServer.Server.Responses;
 using BasicWebServer.Server.Views;
+using System.Text;
+using System.Web;
 
 namespace BasicWebServer.Demo
 {
@@ -23,6 +25,7 @@ namespace BasicWebServer.Demo
             .MapGet("/redirect", new RedirectResponse("https://www.aboutyou.com"))
             .MapPost("/HTML", new TextResponse("", AddFormDataAction))
             .MapGet("/content", new HtmlResponse(DownloadForm.Html))
+            .MapGet("/cookies", new HtmlResponse("", AddCookiesAction))
             .MapPost("/content", new TextFileResponse(Filename))
             );
 
@@ -66,6 +69,40 @@ namespace BasicWebServer.Demo
             var responsesString = string.Join($"{Environment.NewLine}{new string('-', 100)}", responses);
 
             await File.WriteAllTextAsync(fileName, responsesString);
+        }
+
+
+        private static void  AddCookiesAction(Request request, Response response)
+        {
+
+            if (request.Cookies.Any())
+            {
+
+
+                var cookieText = new StringBuilder();
+                cookieText.AppendLine("<h1>Cookies:<h1");
+                cookieText
+                 .Append("<table border='1'><tr><th>Name</th><th>Value</th></tr>");
+
+                foreach (var cookie in request.Cookies)
+                {
+                    cookieText.Append("<tr>");
+                    cookieText
+                        .Append($"<td>{HttpUtility.HtmlEncode(cookie.Name)}</td>");
+                    cookieText
+                        .Append($"<td>{HttpUtility.HtmlEncode(cookie.Value)}</td>");
+                    cookieText.Append("</tr>");
+                }
+
+                cookieText.Append("</table>");
+
+               response.Body = cookieText.ToString();   
+            }
+            else
+            {
+                response.Body = "<h1> Cookies set!</h1>";
+            }
+        
         }
     }
 }
