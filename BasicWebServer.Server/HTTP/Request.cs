@@ -6,7 +6,7 @@ namespace BasicWebServer.Server.HTTP
 {
     public class Request
     {
-        public Request(Method method, string url, HeaderCollection headers, string body, Dictionary<string, string> form, CookieCollection cookies)
+        public Request(Method method, string url, HeaderCollection headers, string body, Dictionary<string, string> form, CookieCollection cookies, Session session)
         {
             this.Method = method;
             this.Url = url;
@@ -14,12 +14,14 @@ namespace BasicWebServer.Server.HTTP
             this.Body = body;
             this.Form = form;
             this.Cookies = cookies;
+            this.Session = session;
         }
 
         public Request()
         {
         }
 
+        private static Dictionary<string, Session> Sessions = new();
         public Method Method { get; }
 
         public string Url { get; }
@@ -29,6 +31,8 @@ namespace BasicWebServer.Server.HTTP
         public CookieCollection Cookies { get; }
 
         public string Body { get; }
+
+        public Session Session { get; set; }
 
         public IReadOnlyDictionary<string, string> Form { get; private set; }
 
@@ -54,15 +58,28 @@ namespace BasicWebServer.Server.HTTP
 
             HeaderCollection headers = ParseHeaders(headerLines);
             var cookies = ParseCookies(headers);
+            var session = GetSession(cookies);
 
             string[] bodyLines = lines.Skip(1 + headerLines.Length + 1).ToArray();
             string body = string.Join("\r\n", bodyLines);
 
             var form = ParseForm(headers, body);
 
-            return new Request(method, url, headers, body, form, cookies);
+            return new Request(method, url, headers, body, form, cookies, session);
         }
 
+        private static Session GetSession(CookieCollection cookies)
+        {
+            var sessionId = cookies.Contains(Session.SessionCookieName)
+         ? cookies[Session.SessionCookieName]
+         : Guid.NewGuid().ToString();
+
+            if (Sessions.ContainsKey(sessionId) == false)
+            {
+                Sessions[sessionId] = new Session(sessionId);
+            }
+            return Sessions[sessionId];
+        }
 
         private static Dictionary<string,string> ParseForm(HeaderCollection headers, string body)
         {
